@@ -6,7 +6,6 @@ from competition_app.models import (
 )
 from decimal import Decimal
 from datetime import datetime, timedelta
-import random
 
 class Command(BaseCommand):
     help = 'Populates the database with tied competition data'
@@ -28,9 +27,7 @@ class Command(BaseCommand):
         # Create or get judges
         judge1_user, _ = User.objects.get_or_create(
             username='judge1',
-            defaults={
-                'email': 'judge1@example.com'
-            }
+            defaults={'email': 'judge1@example.com'}
         )
         if _:
             judge1_user.set_password('judge123')
@@ -38,9 +35,7 @@ class Command(BaseCommand):
 
         judge2_user, _ = User.objects.get_or_create(
             username='judge2',
-            defaults={
-                'email': 'judge2@example.com'
-            }
+            defaults={'email': 'judge2@example.com'}
         )
         if _:
             judge2_user.set_password('judge123')
@@ -62,24 +57,26 @@ class Command(BaseCommand):
             }
         )
 
-        # Create or get participants
-        participant1, _ = Participant.objects.get_or_create(
-            email='john@example.com',
-            defaults={
-                'name': 'John Doe',
-                'phone': '1111111111'
-            }
-        )
+        # Create participants with names that will help demonstrate alphabetical tiebreaker
+        participants_data = [
+            ('Alice Anderson', 'alice@example.com', '1111111111'),
+            ('Bob Brown', 'bob@example.com', '2222222222'),
+            ('Charlie Cooper', 'charlie@example.com', '3333333333'),
+            ('David Davis', 'david@example.com', '4444444444'),
+        ]
 
-        participant2, _ = Participant.objects.get_or_create(
-            email='jane@example.com',
-            defaults={
-                'name': 'Jane Smith',
-                'phone': '2222222222'
-            }
-        )
+        participants = []
+        for name, email, phone in participants_data:
+            participant, _ = Participant.objects.get_or_create(
+                email=email,
+                defaults={
+                    'name': name,
+                    'phone': phone
+                }
+            )
+            participants.append(participant)
 
-        # Create competition (create new one each time as it's a demo)
+        # Create competition
         competition = Competition.objects.create(
             name=f'Tie Breaker Demo Competition {datetime.now().strftime("%Y-%m-%d %H:%M")}',
             description='A competition to demonstrate tie breaker functionality',
@@ -93,18 +90,18 @@ class Command(BaseCommand):
         # Create rounds with criteria
         rounds_data = [
             {
-                'name': 'Technical Round',
+                'name': 'First Round',
                 'criteria': [
-                    ('Code Quality', 10),
-                    ('Problem Solving', 10),
+                    ('Technical Skills', 10),
                     ('Innovation', 10),
+                    ('Problem Solving', 10),
                 ]
             },
             {
-                'name': 'Presentation Round',
+                'name': 'Final Round',
                 'criteria': [
-                    ('Delivery', 10),
-                    ('Content', 10),
+                    ('Performance', 10),
+                    ('Quality', 10),
                     ('Impact', 10),
                 ]
             }
@@ -117,10 +114,9 @@ class Command(BaseCommand):
                 description=f'Round {round_idx}',
                 order=round_idx,
                 status='ONGOING',
-                weight_percentage=50  # Equal weight for both rounds
+                weight_percentage=50
             )
 
-            # Create criteria for the round
             for criterion_name, max_score in round_data['criteria']:
                 Criterion.objects.create(
                     round=round_obj,
@@ -130,25 +126,32 @@ class Command(BaseCommand):
                 )
 
         # Assign participants to competition
-        for idx, participant in enumerate([participant1, participant2], 1):
+        for idx, participant in enumerate(participants, 1):
             ParticipantCompetition.objects.create(
                 participant=participant,
                 competition=competition,
                 number=idx
             )
 
-        # Submit identical scores for both participants
+        # Submit scores to create interesting tie scenarios
         for round_obj in competition.rounds.all():
             for criterion in round_obj.criteria.all():
-                # Create identical scores from both judges
                 for judge in [judge1, judge2]:
-                    for participant in [participant1, participant2]:
-                        # Create identical scores except for one criterion
-                        if criterion.name == 'Innovation' and participant == participant2:
-                            # Slightly higher score for participant2 in Innovation
-                            score_value = 9.5
-                        else:
+                    for participant in participants:
+                        # First round: All participants get 9.0
+                        if round_obj.name == 'First Round':
                             score_value = 9.0
+                        # Final round: Create interesting tie-breaking scenario
+                        else:
+                            if criterion.name == 'Performance':
+                                # Alice and Bob tie with 9.5, Charlie and David tie with 9.0
+                                score_value = 9.5 if participant.name in ['Alice Anderson', 'Bob Brown'] else 9.0
+                            elif criterion.name == 'Quality':
+                                # All get 9.0 to maintain overall tie
+                                score_value = 9.0
+                            else:  # Impact
+                                # Bob and Charlie get 9.5, others 9.0
+                                score_value = 9.5 if participant.name in ['Bob Brown', 'Charlie Cooper'] else 9.0
 
                         Score.objects.create(
                             participant=participant,
@@ -163,7 +166,7 @@ class Command(BaseCommand):
         from competition_app.views import calculate_rankings
         for round_obj in competition.rounds.all():
             # Calculate total scores
-            for participant in [participant1, participant2]:
+            for participant in participants:
                 total_score = sum(
                     score.score
                     for score in Score.objects.filter(
@@ -181,7 +184,16 @@ class Command(BaseCommand):
                     rank=0  # Will be updated by calculate_rankings
                 )
 
-            # Calculate rankings with tiebreaker
+            # Calculate rankings
             calculate_rankings(round_obj)
 
-        self.stdout.write(self.style.SUCCESS('Successfully populated tie competition data'))
+        self.stdout.write(self.style.SUCCESS(
+            'Successfully populated tie competition data with the following scenario:\n'
+            '- All participants have the same total score in the First Round\n'
+            '- In the Final Round:\n'
+            '  * Alice and Bob tie for higher scores in Performance\n'
+            '  * Bob and Charlie tie for higher scores in Impact\n'
+            '  * All tie in Quality\n'
+            'This creates an interesting tie-breaking scenario!'
+        ))
+
