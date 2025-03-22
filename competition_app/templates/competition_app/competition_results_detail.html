@@ -1,0 +1,515 @@
+{% extends 'base.html' %}
+{% load competition_tags %}
+
+{% block title %}{{ competition.name }} - Results{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-700 py-12 relative overflow-hidden">
+    <!-- Decorative Background Elements -->
+    <div class="absolute inset-0 z-0">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)]"></div>
+        <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 space-y-10 relative z-10">
+        <!-- Competition Header -->
+        <div class="bg-white/5 backdrop-blur-lg rounded-3xl p-10 transform hover:scale-[1.01] transition-all duration-300 border border-white/10 shadow-2xl">
+            <div class="text-center relative">
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent"></div>
+                <h1 class="text-5xl font-extrabold text-white mb-4 drop-shadow-lg relative">{{ competition.name|title }}</h1>
+                <p class="text-2xl text-emerald-100 font-light tracking-wide">Final Results</p>
+            </div>
+            
+            <!-- Search Controls -->
+            <div class="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 shadow-lg space-y-4">
+                <!-- Round Selector -->
+                <div class="relative">
+                    <select id="round-selector" 
+                            class="w-full appearance-none bg-emerald-50 text-emerald-900 border-2 border-emerald-500/30 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 hover:border-emerald-400 transition-colors cursor-pointer"
+                            onchange="filterResults()">
+                        <option value="all">All Rounds</option>
+                        {% for round in rounds %}
+                            <option value="{{ round.name|lower }}">{{ round.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-emerald-600">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Competition Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
+                <div class="bg-gradient-to-br from-white/10 to-white/5 hover:from-white/15 hover:to-white/10 rounded-2xl p-8 text-center backdrop-blur-sm transition-all duration-300 group border border-white/10 shadow-lg">
+                    <div class="text-5xl font-bold text-white mb-3 group-hover:scale-110 transition-transform duration-300">{{ competition.participants.count }}</div>
+                    <div class="text-emerald-200 text-lg">Participants</div>
+                </div>
+                <div class="bg-gradient-to-br from-white/10 to-white/5 hover:from-white/15 hover:to-white/10 rounded-2xl p-8 text-center backdrop-blur-sm transition-all duration-300 group border border-white/10 shadow-lg">
+                    <div class="text-5xl font-bold text-white mb-3 group-hover:scale-110 transition-transform duration-300">{{ competition.rounds.count }}</div>
+                    <div class="text-emerald-200 text-lg">Rounds</div>
+                </div>
+                <div class="bg-gradient-to-br from-white/10 to-white/5 hover:from-white/15 hover:to-white/10 rounded-2xl p-8 text-center backdrop-blur-sm transition-all duration-300 group border border-white/10 shadow-lg">
+                    <div class="text-5xl font-bold text-white mb-3 group-hover:scale-110 transition-transform duration-300">{{ competition.judge_assignments.count }}</div>
+                    <div class="text-emerald-200 text-lg">Judges</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tie-Breaking Toggle -->
+        <div class="flex justify-end mb-4">
+            <div class="inline-flex items-center">
+                <span class="text-emerald-200 mr-2">Show tied ranks</span>
+                <label class="relative inline-block w-12 h-6">
+                    <input type="checkbox" id="tie-breaking-toggle" class="opacity-0 w-0 h-0" 
+                           {% if not tie_breaking_enabled %}checked{% endif %}>
+                    <span class="slider absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-white/20 rounded-full transition-all duration-300 before:absolute before:h-4 before:w-4 before:left-1 before:bottom-1 before:bg-white before:rounded-full before:transition-all before:duration-300"></span>
+                </label>
+                <span class="text-emerald-200 ml-2">Break ties</span>
+            </div>
+        </div>
+        
+        <!-- Final Rankings -->
+        <div class="mt-10 final-rankings">
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-bold text-white mb-2">Final Rankings</h2>
+                <div class="h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-emerald-500 to-transparent"></div>
+            </div>
+            
+            <div class="bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-8 backdrop-blur-sm border border-white/10 shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="text-white border-b border-white/10">
+                                <th class="py-4 px-6 text-left">Rank</th>
+                                <th class="py-4 px-6 text-left">Participant</th>
+                                {% for round in rounds %}
+                                <th class="py-4 px-6 text-center">{{ round.name }}</th>
+                                {% endfor %}
+                                <th class="py-4 px-6 text-center">Final Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for participant in participants %}
+                            <tr class="text-white border-b border-white/10 hover:bg-white/5 group">
+                                <td class="py-4 px-6">
+                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full font-bold
+                                        {% if participant.rank == 1 %}bg-yellow-400/20 text-yellow-400 border border-yellow-400/50
+                                        {% elif participant.rank == 2 %}bg-gray-300/20 text-gray-300 border border-gray-300/50
+                                        {% elif participant.rank == 3 %}bg-amber-700/20 text-amber-700 border border-amber-700/50
+                                        {% else %}bg-white/10 text-white border border-white/30
+                                        {% endif %}">
+                                        {{ participant.rank }}
+                                    </span>
+                                    {% if participant.is_tied %}
+                                        <span class="ml-1 text-xs text-amber-400">T</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-4 px-6 font-semibold relative">
+                                    {{ participant.name }}
+                                    
+                                    <!-- Tie-breaking tooltip -->
+                                    {% if tie_breaking_enabled and participant.tie_breakers %}
+                                    <div class="absolute left-0 top-0 mt-16 w-64 bg-gray-900 text-white p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 text-xs">
+                                        <div class="font-bold mb-1 text-emerald-400">Tie-Breaking Details:</div>
+                                        <div class="grid grid-cols-2 gap-1">
+                                            <div>Final Round:</div>
+                                            <div class="text-right">{{ participant.tie_breakers.final_round|floatformat:2 }}</div>
+                                            <div>First Places:</div>
+                                            <div class="text-right">{{ participant.tie_breakers.first_places }}</div>
+                                            <div>Highest Score:</div>
+                                            <div class="text-right">{{ participant.tie_breakers.highest_score|floatformat:2 }}</div>
+                                        </div>
+                                        <div class="absolute -top-2 left-4 w-4 h-4 bg-gray-900 transform rotate-45"></div>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                {% for round in rounds %}
+                                <td class="py-4 px-6 text-center">
+                                    {% with score_data=round.participant_scores|get_item:participant.id %}
+                                    {% if score_data %}
+                                    <span class="font-mono {% if score_data.rank <= 3 %}text-emerald-400{% endif %}">
+                                        {{ score_data.total|floatformat:2 }}
+                                        {% if score_data.rank <= 3 %}
+                                        <span class="text-xs ml-1">(#{{ score_data.rank }}
+                                        {% if score_data.tied %}T{% endif %})</span>
+                                        {% endif %}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-gray-500">-</span>
+                                    {% endif %}
+                                    {% endwith %}
+                                </td>
+                                {% endfor %}
+                                <td class="py-4 px-6 text-center">
+                                    <span class="font-mono text-lg font-bold 
+                                        {% if participant.rank == 1 %}text-yellow-400
+                                        {% elif participant.rank == 2 %}text-gray-300
+                                        {% elif participant.rank == 3 %}text-amber-700
+                                        {% else %}text-white{% endif %}">
+                                        {{ participant.final_score|floatformat:2 }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Tie indicator legend -->
+            <div class="mt-4 text-center">
+                <p class="text-sm text-emerald-200">
+                    <span class="inline-block bg-amber-400/20 text-amber-400 px-2 py-1 rounded mr-2">T</span>
+                    indicates a tie between participants with the same score
+                </p>
+            </div>
+        </div>
+        
+        <!-- Tie-Breaking System Explanation -->
+        <div class="mt-8 bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 shadow-lg">
+            <h3 class="text-xl font-bold text-white mb-4">Tie-Breaking System</h3>
+            <p class="text-emerald-200 mb-4">In case of tied final scores, the following tie-breakers are applied in order:</p>
+            <ol class="list-decimal list-inside text-white space-y-2 ml-4">
+                <li>Highest score in the final round</li>
+                <li>Most first-place finishes across all rounds</li>
+                <li>Highest score from any round</li>
+                <li>Alphabetical order by name</li>
+            </ol>
+        </div>
+
+        <!-- Results by Round -->
+        {% for round in rounds %}
+        <div class="space-y-8 round-section" data-round="{{ round.name|lower }}">
+            <div class="text-center">
+                <h2 class="text-4xl font-bold text-white mb-2" data-round-name="{{ round.name }}">{{ round.name|title }}</h2>
+                <div class="h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-emerald-500 to-transparent"></div>
+            </div>
+
+            <!-- Top 3 Podium -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 relative">
+                <!-- Second Place -->
+                {% for participant_id, scores in round.participant_scores.items %}
+                {% if scores.rank == 2 %}
+                {% with participant=competition|get_participant:participant_id %}
+                <div class="bg-gradient-to-b from-gray-300/20 to-gray-300/5 rounded-2xl p-8 text-center backdrop-blur-sm transform hover:scale-105 transition-all duration-300 border border-gray-300/20 shadow-xl -translate-y-4"
+                     data-participant-name="{{ participant.name }}" data-round-name="{{ round.name }}" data-score="{{ scores.total }}">
+                    <div class="relative">
+                        {% if participant.profile_image %}
+                            <img src="{{ participant.profile_image.url }}" alt="{{ participant.name }}" 
+                                 class="w-28 h-28 rounded-full object-cover mx-auto mb-4 border-4 border-gray-300 shadow-lg">
+                        {% else %}
+                            <div class="w-28 h-28 rounded-full bg-gray-300/20 flex items-center justify-center text-white text-3xl font-bold mx-auto mb-4 border-4 border-gray-300">
+                                {{ participant.name|make_list|first|upper }}
+                            </div>
+                        {% endif %}
+                        <div class="absolute -top-4 -right-4 w-12 h-12 rounded-full bg-gray-300 text-gray-900 flex items-center justify-center font-bold text-xl shadow-lg">
+                            2{% if scores.tied %}<span class="text-sm">T</span>{% endif %}
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">{{ participant.name }}</h3>
+                    <div class="text-3xl font-bold text-gray-300">{{ scores.total|floatformat:2 }}</div>
+                </div>
+                {% endwith %}
+                {% endif %}
+                {% endfor %}
+
+                <!-- First Place -->
+                {% for participant_id, scores in round.participant_scores.items %}
+                {% if scores.rank == 1 %}
+                {% with participant=competition|get_participant:participant_id %}
+                <div class="bg-gradient-to-b from-yellow-400/30 to-yellow-400/5 rounded-2xl p-8 text-center backdrop-blur-sm transform hover:scale-105 transition-all duration-300 border border-yellow-400/30 shadow-xl -translate-y-8"
+                     data-participant-name="{{ participant.name }}" data-round-name="{{ round.name }}" data-score="{{ scores.total }}">
+                    <div class="relative">
+                        {% if participant.profile_image %}
+                            <img src="{{ participant.profile_image.url }}" alt="{{ participant.name }}" 
+                                 class="w-32 h-32 rounded-full object-cover mx-auto mb-4 border-4 border-yellow-400 shadow-lg">
+                        {% else %}
+                            <div class="w-32 h-32 rounded-full bg-yellow-400/20 flex items-center justify-center text-white text-4xl font-bold mx-auto mb-4 border-4 border-yellow-400">
+                                {{ participant.name|make_list|first|upper }}
+                            </div>
+                        {% endif %}
+                        <div class="absolute -top-4 -right-4 w-14 h-14 rounded-full bg-yellow-400 text-yellow-900 flex items-center justify-center font-bold text-2xl shadow-lg">
+                            1{% if scores.tied %}<span class="text-sm">T</span>{% endif %}
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">{{ participant.name }}</h3>
+                    <div class="text-4xl font-bold text-yellow-400">{{ scores.total|floatformat:2 }}</div>
+                </div>
+                {% endwith %}
+                {% endif %}
+                {% endfor %}
+
+                <!-- Third Place -->
+                {% for participant_id, scores in round.participant_scores.items %}
+                {% if scores.rank == 3 %}
+                {% with participant=competition|get_participant:participant_id %}
+                <div class="bg-gradient-to-b from-yellow-700/20 to-yellow-700/5 rounded-2xl p-8 text-center backdrop-blur-sm transform hover:scale-105 transition-all duration-300 border border-yellow-700/20 shadow-xl"
+                     data-participant-name="{{ participant.name }}" data-round-name="{{ round.name }}" data-score="{{ scores.total }}">
+                    <div class="relative">
+                        {% if participant.profile_image %}
+                            <img src="{{ participant.profile_image.url }}" alt="{{ participant.name }}" 
+                                 class="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-4 border-yellow-700 shadow-lg">
+                        {% else %}
+                            <div class="w-24 h-24 rounded-full bg-yellow-700/20 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 border-4 border-yellow-700">
+                                {{ participant.name|make_list|first|upper }}
+                            </div>
+                        {% endif %}
+                        <div class="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-yellow-700 text-white flex items-center justify-center font-bold text-lg shadow-lg">
+                            3{% if scores.tied %}<span class="text-sm">T</span>{% endif %}
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">{{ participant.name }}</h3>
+                    <div class="text-3xl font-bold text-yellow-700">{{ scores.total|floatformat:2 }}</div>
+                </div>
+                {% endwith %}
+                {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Results Table -->
+            <div class="space-y-8">
+                <!-- Overall Rankings -->
+                <div class="bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-8 backdrop-blur-sm border border-white/10 shadow-2xl">
+                    <h3 class="text-2xl font-bold text-white mb-6" data-round-name="{{ round.name }}">{{ round.name }} Rankings</h3>
+                    <div class="overflow-hidden">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b-2 border-white/20">
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-emerald-200">Rank</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-emerald-200">Participant</th>
+                                    {% for criterion in round.criteria.all %}
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-emerald-200">
+                                        <div>{{ criterion.name }}</div>
+                                        <div class="text-xs opacity-75">({{ criterion.max_score }} pts)</div>
+                                    </th>
+                                    {% endfor %}
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-emerald-200">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/10">
+                                {% for participant_id, scores in round.participant_scores.items %}
+                                {% with participant=competition|get_participant:participant_id %}
+                                <tr class="hover:bg-white/5 transition-colors duration-200"
+                                    data-participant-name="{{ participant.name }}" 
+                                    data-round-name="{{ round.name }}" 
+                                    data-score="{{ scores.total }}">
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full font-semibold
+                                            {% if scores.rank == 1 %}bg-yellow-400/20 text-yellow-400 border border-yellow-400/50
+                                            {% elif scores.rank == 2 %}bg-gray-300/20 text-gray-300 border border-gray-300/50
+                                            {% elif scores.rank == 3 %}bg-yellow-700/20 text-yellow-700 border border-yellow-700/50
+                                            {% else %}bg-white/10 text-white border border-white/20{% endif %}">
+                                            {{ scores.rank }}
+                                        </span>
+                                        {% if scores.tied %}
+                                            <span class="ml-1 text-xs text-amber-400">T</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 text-white font-medium">{{ participant.name }}</td>
+                                    {% for criterion in round.criteria.all %}
+                                    <td class="px-6 py-4 text-white">
+                                        {% with criterion_score=scores.scores|get_item:criterion.id %}
+                                        {{ criterion_score|floatformat:2 }}
+                                        {% endwith %}
+                                    </td>
+                                    {% endfor %}
+                                    <td class="px-6 py-4 font-semibold 
+                                        {% if scores.rank == 1 %}text-yellow-400
+                                        {% elif scores.rank == 2 %}text-gray-300
+                                        {% elif scores.rank == 3 %}text-yellow-700
+                                        {% else %}text-white{% endif %}">
+                                        {{ scores.total|floatformat:2 }}
+                                    </td>
+                                </tr>
+                                {% endwith %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Detailed Judge Scores -->
+                {% for participant_id, scores in round.participant_scores.items %}
+                {% with participant=competition|get_participant:participant_id %}
+                <div class="bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-8 backdrop-blur-sm border border-white/10 shadow-2xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center space-x-4">
+                            <span class="inline-flex items-center justify-center w-10 h-10 rounded-full font-bold
+                                {% if scores.rank == 1 %}bg-yellow-400/20 text-yellow-400 border border-yellow-400/50
+                                {% elif scores.rank == 2 %}bg-gray-300/20 text-gray-300 border border-gray-300/50
+                                {% elif scores.rank == 3 %}bg-yellow-700/20 text-yellow-700 border border-yellow-700/50
+                                {% else %}bg-white/10 text-white border border-white/20{% endif %}">
+                                {{ scores.rank }}
+                                {% if scores.tied %}<span class="text-xs">T</span>{% endif %}
+                            </span>
+                            <h3 class="text-2xl font-bold text-white">{{ participant.name }}</h3>
+                        </div>
+                        <div class="text-2xl font-bold 
+                            {% if scores.rank == 1 %}text-yellow-400
+                            {% elif scores.rank == 2 %}text-gray-300
+                            {% elif scores.rank == 3 %}text-yellow-700
+                            {% else %}text-white{% endif %}">
+                            {{ scores.total|floatformat:2 }}
+                        </div>
+                    </div>
+
+                    <div class="overflow-hidden rounded-xl">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-black/20 border-b border-white/10">
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-emerald-200">Judge</th>
+                                    {% for criterion in round.criteria.all %}
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-emerald-200">
+                                        <div>{{ criterion.name }}</div>
+                                        <div class="text-xs opacity-75">({{ criterion.max_score }} pts)</div>
+                                    </th>
+                                    {% endfor %}
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-emerald-200">Average</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/10">
+                                {% for judge_id, judge_data in scores.judge_scores.items %}
+                                <tr class="hover:bg-white/5 transition-colors duration-200">
+                                    <td class="px-6 py-4 text-white font-medium">{{ judge_data.judge_name }}</td>
+                                    {% for criterion in round.criteria.all %}
+                                    <td class="px-6 py-4 text-white">
+                                        {% with judge_criterion_score=judge_data.scores|get_item:criterion.id %}
+                                        {{ judge_criterion_score|floatformat:2 }}
+                                        {% endwith %}
+                                    </td>
+                                    {% endfor %}
+                                    <td class="px-6 py-4">
+                                        {% with judge_scores=judge_data.scores.values %}
+                                        <span class="text-white font-medium">
+                                            {{ judge_scores|average|floatformat:2 }}
+                                        </span>
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                <!-- Final Average Row -->
+                                <tr class="bg-emerald-900/30 font-semibold">
+                                    <td class="px-6 py-4 text-emerald-200">Final Average</td>
+                                    {% for criterion in round.criteria.all %}
+                                    <td class="px-6 py-4 text-emerald-200">
+                                        {% with criterion_score=scores.scores|get_item:criterion.id %}
+                                        {{ criterion_score|floatformat:2 }}
+                                        {% endwith %}
+                                    </td>
+                                    {% endfor %}
+                                    <td class="px-6 py-4 text-emerald-200">{{ scores.total|floatformat:2 }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endwith %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Judging Panel -->
+        <div class="bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-8 backdrop-blur-sm border border-white/10 shadow-2xl">
+            <h2 class="text-3xl font-bold text-white mb-8">Judging Panel</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {% for assignment in competition.judge_assignments.all %}
+                <div class="bg-gradient-to-br from-emerald-500/10 to-transparent rounded-2xl p-6 text-center backdrop-blur-sm border border-white/10 hover:border-emerald-500/50 transition-all duration-300 group">
+                    <div class="relative inline-block">
+                        {% if assignment.judge.profile_image %}
+                        <img src="{{ assignment.judge.profile_image.url }}" 
+                             alt="{{ assignment.judge.user.get_full_name|title }}"
+                             class="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-emerald-400/50 group-hover:border-emerald-400 transition-all duration-300 shadow-lg">
+                        {% else %}
+                        <div class="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-700 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 border-2 border-emerald-400/50 group-hover:border-emerald-400 transition-all duration-300 shadow-lg">
+                            {{ assignment.judge.user.get_full_name|make_list|first|upper }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <h3 class="text-xl font-bold text-white group-hover:text-emerald-300 transition-colors duration-300">
+                        {{ assignment.judge.user.get_full_name|title }}
+                    </h3>
+                    <p class="text-emerald-200/80 text-sm mt-2">{{ assignment.judge.expertise }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+    .backdrop-blur-lg {
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+    
+    .backdrop-blur-sm {
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+    
+    /* Style for the toggle switch */
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.2);
+        transition: .4s;
+        border-radius: 34px;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: #10B981;
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(18px);
+    }
+</style>
+
+<script>
+    function filterResults() {
+        const selectedRound = document.getElementById('round-selector').value;
+        const roundSections = document.querySelectorAll('.round-section');
+    
+        roundSections.forEach(section => {
+            const roundName = section.dataset.round;
+            section.style.display = selectedRound === 'all' || roundName === selectedRound ? '' : 'none';
+        });
+    }
+    
+    // Tie-breaking toggle functionality
+    document.getElementById('tie-breaking-toggle').addEventListener('change', function() {
+        // Reload the page with the appropriate parameter
+        const url = new URL(window.location.href);
+        url.searchParams.set('break_ties', this.checked ? '1' : '0');
+        window.location.href = url.toString();
+    });
+    
+    // Update the toggle based on URL parameter
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const breakTies = urlParams.get('break_ties') === '1';
+        document.getElementById('tie-breaking-toggle').checked = breakTies;
+    });
+</script>
+{% endblock %}

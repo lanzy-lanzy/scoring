@@ -1,0 +1,42 @@
+<!-- Navigation Sidebar -->
+<div class="bg-white shadow-lg rounded-xl overflow-hidden w-full">
+    <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-emerald-100">
+        <h3 class="text-lg font-semibold text-gray-900">Active Competitions</h3>
+    </div>
+
+    <div class="divide-y divide-gray-200">
+        {% for data in competition_data %}
+        <div class="p-4 hover:bg-gray-50 transition-colors">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h4 class="text-lg4 font-semibold text-gray-900">{{ data.competition.name }}</h4>
+                    <p class="text-sm text-gray-500">{{ data.participant_count }} Participants</p>
+                </div>
+            </div>
+
+            <!-- Rounds List -->
+            <div class="space-y-2">
+                {% for round in data.rounds %}
+                <a href="{% url 'scoring_panel' round.id %}" 
+                   class="block p-2 rounded-lg hover:bg-emerald-50 transition-colors">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-gray-900">{{ round.name }}</span>
+                        <span class="px-2 py-1 text-xs rounded-full 
+                            {% if round.status == 'ONGOING' %}bg-emerald-100 text-emerald-800
+                            {% elif round.status == 'COMPLETED' %}bg-emerald-100 text-emerald-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ round.status }}
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">Weight: {{ round.weight_percentage }}%</p>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="p-4 text-center text-gray-500">
+            No active competitions available.
+        </div>
+        {% endfor %}
+    </div>
+</div>

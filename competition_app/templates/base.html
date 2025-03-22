@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Scoring System{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.css" rel="stylesheet" />
+    <script src="https://unpkg.com/heroicons@2.0.18/24/outline/index.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-emerald-50">
+ 
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+     
+        <aside class="fixed inset-y-0 left-0 z-50 w-64 transition-transform -translate-x-full bg-gradient-to-b from-emerald-600 via-emerald-700 to-emerald-800 sm:translate-x-0" aria-label="Sidebar">
+            <div class="h-full px-3 py-4 overflow-y-auto">
+                <div class="flex items-center mb-5 pl-2.5">
+                    <i class="fas fa-trophy text-emerald-100 mr-2"></i>
+                    <span class="self-center text-xl font-semibold whitespace-nowrap text-white">Scoring System</span>
+                </div>
+                <ul class="space-y-2 font-medium">
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff %}  <!-- Admin Navigation -->
+                        <li>
+                            <a href="{% url 'dashboard' %}" class="flex items-center p-2 text-white rounded-lg hover:bg-emerald-900 group">
+                                <i class="fas fa-home text-emerald-200 w-5 h-5"></i>
+                                <span class="ml-3">Admin Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'competition_list' %}" class="flex items-center p-2 text-white rounded-lg hover:bg-emerald-900 group">
+                                <i class="fas fa-medal text-emerald-200 w-5 h-5"></i>
+                                <span class="ml-3">Manage Competitions</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'participant_management' %}" class="flex items-center p-2 text-white rounded-lg hover:bg-emerald-900 group">
+                                <i class="fas fa-users text-emerald-200 w-5 h-5"></i>
+                                <span class="ml-3">Manage Participants</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'judge_management' %}" class="flex items-center p-2 text-white rounded-lg hover:bg-emerald-900 group">
+                                <i class="fas fa-gavel text-emerald-200 w-5 h-5"></i>
+                                <span class="ml-3">Manage Judges</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'results_list' %}" class="flex items-center p-2 text-white rounded-lg hover:bg-emerald-900 group">
+                                <i class="fas fa-list-ol text-emerald-200 w-5 h-5"></i>
+                                <span class="ml-3">Results List</span>
+                            </a>
+                        </li>
+                        {% elif user.is_judge %}  <!-- Judge Navigation -->
+                        <li>
+                            <a href="{% url 'judge_dashboard' %}" class="text-lg flex items-center p-2 text-white rounded-lg hover:bg-emerald-900 group">
+                                <i class="fas fa-gavel text-emerald-200 w-5 h-5"></i>
+                                <span class="ml-3">Judge Dashboard</span>
+                            </a>
+                        </li>
+                        
+                        <!-- Active Competitions List -->
+                        {% if competition_data %}
+                        <li class="mt-4">
+                            <div class="px-2 py-1 text-lg text-white font-medium">Active Competitions</div>
+                            <ul class="mt-2 space-y-1">
+                                {% for data in competition_data %}
+                                <li>
+                                    <div class="px-2 py-1 text-emerald-100 text-4xl">
+                                        {{ data.competition.name }}
+                                        {% if data.rounds %}
+                                        <ul class="ml-4 mt-1 space-y-1">
+                                            {% for round in data.rounds %}
+                                            <li>
+                                                <a href="{% url 'scoring_panel' round.id %}" 
+                                                   class="flex items-center py-1 text-lg text-emerald-200 hover:text-white group">
+                                                    <i class="fas fa-chevron-right text-lg mr-2"></i>
+                                                    {{ round.name }}
+                                                    {% if round.status == 'ONGOING' %}
+                                                    <span class="ml-2 px-1.5 py-0.5 text-xs bg-emerald-500 text-white rounded">Live</span>
+                                                    {% endif %}
+                                                </a>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        {% endif %}
+                        {% endif %}
+                    {% endif %}
+                </ul>
+            </div>
+        </aside>
+ 
+        <!-- Main Content -->
+        <div class="flex-1 sm:ml-64">
+            <!-- Top Navigation -->
+            <nav class="bg-gradient-to-r from-emerald-700 to-emerald-900 border-b border-emerald-600 px-4 py-3 fixed left-0 right-0 top-0 z-40 sm:ml-64 shadow-lg">
+                <div class="flex flex-wrap justify-between items-center">
+                    <div class="flex items-center justify-start">
+                        <button data-drawer-target="drawer-navigation" data-drawer-toggle="drawer-navigation" aria-controls="drawer-navigation" class="p-2 mr-2 text-white rounded-lg sm:hidden hover:text-emerald-200 hover:bg-emerald-800 focus:outline-none transition duration-300">
+                            <i class="fas fa-bars w-6 h-6"></i>
+                        </button>
+                    </div>
+                    
+                    {% comment %} <!-- Search Button -->
+                    <div class="flex items-center">
+                        <a href="{% url 'search' %}" class="flex items-center p-2 text-white rounded-lg hover:bg-emerald-800 transition duration-300">
+                            <i class="fas fa-search mr-2"></i>
+                            <span>Search</span>
+                        </a>
+                    </div> {% endcomment %}
+
+                    <div class="flex items-center">
+                        <div class="flex items-center ml-3">
+                            <div>
+                                <div class="flex items-center ml-3">
+                                    <div class="relative">
+                                        <button type="button" class="flex text-sm bg-emerald-500 rounded-full focus:ring-4 focus:ring-emerald-400 p-0.5 hover:bg-emerald-400 transition duration-300" id="user-menu-button" aria-expanded="false" data-dropdown-toggle="dropdown">
+                                            {% if user.is_authenticated %}
+                                                {% if user.is_judge %}
+                                                    {% if user.judge.profile_image %}
+                                                        <img class="w-9 h-9 rounded-full border-2 border-white" src="{{ user.judge.profile_image.url }}" alt="user photo">
+                                                    {% else %}
+                                                        <img class="w-9 h-9 rounded-full border-2 border-white" src="{{ user.judge.get_profile_image_url }}" alt="user photo">
+                                                    {% endif %}
+                                                {% else %}
+                                                    <img class="w-9 h-9 rounded-full border-2 border-white" src="https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=16a34a&color=fff" alt="user photo">
+                                                {% endif %}
+                                            {% else %}
+                                                <img class="w-9 h-9 rounded-full border-2 border-white" src="https://ui-avatars.com/api/?name=Guest&background=16a34a&color=fff" alt="user photo">
+                                            {% endif %}
+                                        </button>
+                                        <!-- Dropdown menu -->
+                                        <div class="hidden z-50 my-4 w-56 text-base list-none bg-white rounded-lg divide-y divide-gray-100 shadow-lg transform origin-top-right transition duration-200" id="dropdown">
+                                            {% if user.is_authenticated %}
+                                            <div class="py-3 px-4 bg-emerald-50">
+                                                <span class="block text-sm font-semibold text-emerald-900">{{ user.username }}</span>
+                                                <span class="block text-sm text-emerald-600 truncate">{{ user.email }}</span>
+                                            </div>
+                                            <ul class="py-1" aria-labelledby="dropdown">
+                                                <li>
+                                                    <a href="{% url 'edit_profile' %}" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition duration-200"><i class="fas fa-user mr-2 text-emerald-500"></i>Profile</a>
+                                                </li>
+                                                <li>
+                                                    <a href="{% url 'settings' %}" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition duration-200"><i class="fas fa-cog mr-2 text-emerald-500"></i>Settings</a>
+                                                </li>
+                                                <li>
+                                                    <a href="{% url 'logout' %}" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition duration-200"><i class="fas fa-sign-out-alt mr-2 text-emerald-500"></i>Logout</a>
+                                                </li>
+                                            </ul>
+                                            {% else %}
+                                            <ul class="py-1">
+                                                <li>
+                                                    <a href="{% url 'login' %}" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition duration-200"><i class="fas fa-sign-in-alt mr-2 text-emerald-500"></i>Login</a>
+                                                </li>
+                                            </ul>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>                                                        </div>
+                        </div>
+                    </div>
+              <div class="flex items-center">
+                        <a href="{% url 'results_list' %}" class="text-white hover:bg-emerald-600 px-4 py-2 rounded-lg text-sm font-medium transition duration-300 flex items-center">
+                            <i class="fas fa-trophy mr-2"></i>Results
+                        </a>
+                    </div>
+                </div>
+            </nav>
+         
+            <!-- Main Content Area -->
+            <main class="p-4 pt-20 h-screen overflow-auto">
+                {% block content %}
+                {% endblock %}
+            </main>
+        </div>
+      
+    </div>
+ 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.js"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

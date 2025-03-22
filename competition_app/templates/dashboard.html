@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Scoring System{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 bg-gradient-to-br from-emerald-50 to-emerald-100 py-12">
+
+    
+    <!-- Active Competitions Card -->
+    <div class="p-4 bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300">
+        <div class="flex items-center">
+            <div class="inline-flex flex-shrink-0 justify-center items-center w-12 h-12 text-white bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <h3 class="mb-2 text-xl font-medium text-gray-900">Active Competitions</h3>
+                <p class="text-3xl font-bold text-emerald-700">{{ active_competitions }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Participants Card -->
+    <div class="p-4 bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300">
+        <div class="flex items-center">
+            <div class="inline-flex flex-shrink-0 justify-center items-center w-12 h-12 text-white bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <h3 class="mb-2 text-xl font-medium text-gray-900">Total Participants</h3>
+                <p class="text-3xl font-bold text-emerald-700">{{ total_participants }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ongoing Competitions Card -->
+    <div class="p-4 bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300">
+        <div class="flex items-center">
+            <div class="inline-flex flex-shrink-0 justify-center items-center w-12 h-12 text-white bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <h3 class="mb-2 text-xl font-medium text-gray-900">Ongoing Competitions</h3>
+                <p class="text-3xl font-bold text-emerald-700">{{ ongoing_events }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Judges Card -->
+    <div class="p-4 bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300">
+        <div class="flex items-center">
+            <div class="inline-flex flex-shrink-0 justify-center items-center w-12 h-12 text-white bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <h3 class="mb-2 text-xl font-medium text-gray-900">Total Judges</h3>
+                <p class="text-3xl font-bold text-emerald-700">{{ total_judges }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Competitions Section -->
+<div class="mt-8 bg-white rounded-lg shadow">
+    <div class="p-6">
+        <h3 class="text-xl font-semibold text-emerald-800">
+            <svg class="inline w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Recent Competitions
+        </h3>
+        <div class="mt-4 overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-emerald-700 uppercase bg-emerald-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Competition Name</th>
+                        <th scope="col" class="px-6 py-3">Status</th>
+                        <th scope="col" class="px-6 py-3">Participants</th>
+                        <th scope="col" class="px-6 py-3">Start Date</th>
+                        <th scope="col" class="px-6 py-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for competition in recent_competitions %}
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ competition.name }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs font-semibold 
+                                {% if competition.status == 'ACTIVE' %}text-green-800 bg-green-100
+                                {% elif competition.status == 'DRAFT' %}text-gray-800 bg-gray-100
+                                {% elif competition.status == 'COMPLETED' %}text-blue-800 bg-blue-100
+                                {% else %}text-red-800 bg-red-100{% endif %} rounded-full">
+                                {{ competition.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">{{ competition.participants.count }}</td>
+                        <td class="px-6 py-4">{{ competition.start_date|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4">
+                            <a href="{% url 'competition_detail' competition.id %}" 
+                               class="font-medium text-emerald-600 hover:text-emerald-800">
+                               <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                               </svg>
+                               View Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Competitions Section -->
+<div class="grid grid-cols-1 gap-4 mt-8 lg:grid-cols-2">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+            <h3 class="text-xl font-semibold text-emerald-800">
+                <svg class="inline w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Upcoming Competitions
+            </h3>
+            <div class="mt-4 space-y-4">
+                {% for competition in upcoming_events %}
+                <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <div class="flex-shrink-0">
+                        <span class="text-lg font-bold text-emerald-600">{{ competition.start_date|date:"d" }}</span>
+                        <span class="block text-sm text-gray-500">{{ competition.start_date|date:"M" }}</span>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-900">{{ competition.name }}</p>
+                        <p class="text-sm text-gray-500">{{ competition.description|truncatechars:50 }}</p>
+                    </div>
+                    <div class="ml-auto">
+                        <span class="px-2 py-1 text-xs text-emerald-600 bg-emerald-100 rounded-full">
+                            <svg class="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Coming Soon
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+            <h3 class="text-xl font-semibold text-emerald-800">
+                <svg class="inline w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Quick Actions
+            </h3>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <a href="{% url 'create_competition' %}" 
+                   class="p-4 text-left bg-gradient-to-r from-emerald-500 to-emerald-700 rounded-lg hover:from-emerald-600 hover:to-emerald-800">
+                    <svg class="w-6 h-6 mb-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    <span class="block text-white text-lg font-medium">New Competition</span>
+                    <span class="block text-emerald-200 text-sm">Create a new competition</span>
+                </a>
+                <a href="{% url 'create_participant' %}" 
+                   class="p-4 text-left bg-gradient-to-r from-emerald-500 to-emerald-700 rounded-lg hover:from-emerald-600 hover:to-emerald-800">
+                    <svg class="w-6 h-6 mb-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                    </svg>
+                    <span class="block text-white text-lg font-medium">Add Participant</span>
+                    <span class="block text-emerald-200 text-sm">Register new participant</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

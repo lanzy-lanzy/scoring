@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Judge Assignment - {{ competition.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 py-12">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Edit Judge Assignment</h1>
+                    <p class="mt-2 text-lg text-gray-600">{{ competition.name }}</p>
+                </div>
+                <a href="{% url 'manage_judges' competition.id %}" 
+                   class="text-emerald-600 hover:text-emerald-900">
+                    &larr; Back to Judge Management
+                </a>
+            </div>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="mb-8">
+                <div class="flex items-center">
+                    {% if assignment.judge.profile_image %}
+                    <img src="{{ assignment.judge.profile_image.url }}" 
+                         class="w-16 h-16 rounded-full mr-4">
+                    {% endif %}
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">
+                            {{ assignment.judge.user.get_full_name }}
+                        </h2>
+                        <p class="text-gray-500">{{ assignment.judge.user.email }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" class="space-y-8">
+                {% csrf_token %}
+                
+                <!-- Status Selection -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Assignment Status</h3>
+                    <div class="mt-4 space-y-4">
+                        <div class="flex items-center">
+                            <input type="radio" 
+                                   name="status" 
+                                   value="ACTIVE"
+                                   {% if assignment.status == 'ACTIVE' %}checked{% endif %}
+                                   class="h-4 w-4 text-emerald-600 border-gray-300 focus:ring-emerald-500">
+                            <label class="ml-3">
+                                <span class="block text-sm font-medium text-gray-900">Active</span>
+                                <span class="block text-sm text-gray-500">Judge can access and score rounds</span>
+                            </label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" 
+                                   name="status" 
+                                   value="INACTIVE"
+                                   {% if assignment.status == 'INACTIVE' %}checked{% endif %}
+                                   class="h-4 w-4 text-emerald-600 border-gray-300 focus:ring-emerald-500">
+                            <label class="ml-3">
+                                <span class="block text-sm font-medium text-gray-900">Inactive</span>
+                                <span class="block text-sm text-gray-500">Judge cannot access or score rounds</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Round Selection -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Assigned Rounds</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for round in competition_rounds %}
+                        <label class="relative flex items-start p-4 rounded-lg border hover:border-emerald-500 cursor-pointer">
+                            <div class="flex items-center h-5">
+                                <input type="checkbox" 
+                                       name="rounds" 
+                                       value="{{ round.id }}"
+                                       {% if round in assignment.rounds.all %}checked{% endif %}
+                                       class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                            </div>
+                            <div class="ml-3">
+                                <p class="font-medium text-gray-900">{{ round.name }}</p>
+                                <p class="text-sm text-gray-500">Order: #{{ round.order }}</p>
+                                <span class="inline-flex mt-1 items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if round.status == 'ONGOING' %}
+                                        bg-yellow-100 text-yellow-800
+                                    {% elif round.status == 'COMPLETED' %}
+                                        bg-green-100 text-green-800
+                                    {% else %}
+                                        bg-gray-100 text-gray-800
+                                    {% endif %}">
+                                    {{ round.status }}
+                                </span>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex justify-end space-x-4">
+                    <button type="submit"
+                            class="px-6 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

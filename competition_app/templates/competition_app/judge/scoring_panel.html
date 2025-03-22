@@ -1,0 +1,457 @@
+{% extends 'base.html' %}
+{% load scoring_filters %}
+
+{% block title %}Scoring Panel - {{ round.competition.name }} - {{ round.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-emerald-700 via-emerald-600 to-emerald-500 py-6">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Header Section -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h2 class="text-xl font-semibold text-gray-700">Competition</h2>
+                    <p class="text-4xl font-bold text-emerald-600">{{ round.competition.name }}</p>
+                </div>
+                <div class="flex-1 text-center">
+                    <h2 class="text-xl font-semibold text-gray-700">Round</h2>
+                    <p class="text-6xl font-bold text-emerald-700  rounded-lg py-1 px-4 inline-block">{{ round.name }}</p>
+                </div>
+                <div class="flex-1 text-right">
+                    <h2 class="text-xl font-semibold text-gray-700">Judge</h2>
+                    <p class="text-4xl font-bold text-emerald-600">{{ request.user.get_full_name }}</p>
+                </div>
+            </div>
+        </div>
+        <!-- Status Card -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <span class="h-4 w-4 rounded-full {% if round.status == 'ONGOING' %}bg-green-500{% else %}bg-gray-500{% endif %}"></span>
+                    <span class="font-bold text-2xl text-gray-800">Round Status: {{ round.status }}</span>
+                </div>
+                {% if round.status == 'ONGOING' %}
+                <span class="px-6 py-2.5 bg-green-100 text-green-800 rounded-lg text-lg font-semibold">Scoring Open</span>
+                {% else %}
+                <span class="px-6 py-2.5 bg-gray-100 text-gray-800 rounded-lg text-lg font-semibold">Scoring Unavailable</span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if round.status == 'ONGOING' %}
+        <!-- Scoring Table -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th scope="col" class="px-8 py-4 text-left text-lg font-bold text-gray-700">Participant</th>
+                            {% for criterion in criteria %}
+                            <th scope="col" class="px-8 py-4 text-center">
+                                <div class="text-lg font-bold text-gray-700">{{ criterion.name }}</div>
+                                <div class="text-base text-gray-600 mt-1">MAX: {{ criterion.max_score }}</div>
+                            </th>
+                            {% endfor %}
+                            <th scope="col" class="px-8 py-4 text-center">
+                                <div class="text-lg font-bold text-gray-700">Total Score</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for participant in participants %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-8 py-6 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    {% if participant.profile_image %}
+                                    <img class="h-12 w-12 rounded-full" src="{{ participant.profile_image.url }}" alt="">
+                                    {% else %}
+                                    <div class="h-12 w-12 rounded-full bg-emerald-600 flex items-center justify-center">
+                                        <span class="text-xl font-semibold text-white">{{ participant.name|make_list|first }}</span>
+                                    </div>
+                                    {% endif %}
+                                    <div class="ml-4">
+                                        <div class="text-xl font-semibold text-gray-900">{{ participant.name }}</div>
+                                        <div class="text-base text-gray-600">#{{ participant.number }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            {% for criterion in criteria %}
+                            <td class="px-8 py-6 whitespace-nowrap text-center">
+                                <div class="relative">
+                                    <input type="number"
+                                           name="score_{{ participant.id }}_{{ criterion.id }}"
+                                           class="w-24 px-4 py-3 text-center text-lg border-2 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                           min="0"
+                                           max="{{ criterion.max_score }}"
+                                           step="0.1"
+                                           value="{{ existing_scores|get_item:participant.id|get_item:criterion.id|default:'0.0' }}"
+                                           {% if scores_finalized %}readonly{% endif %}
+                                           data-max-score="{{ criterion.max_score }}"
+                                           data-participant-id="{{ participant.id }}"
+                                           data-criterion-id="{{ criterion.id }}"
+                                           required
+                                           oninput="validateScore(this)">
+                                    <div class="score-error hidden text-red-600 text-base mt-2 font-medium"></div>
+                                </div>
+                            </td>
+                            {% endfor %}
+                            <td class="px-8 py-6 whitespace-nowrap text-center">
+                                <span id="total-score-{{ participant.id }}" class="text-2xl font-bold text-emerald-600">0.0</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="actionButtons" class="mt-6 flex justify-end space-x-4">
+            <button id="submitAllBtn" 
+                    type="button"
+                    class="px-8 py-3 bg-emerald-600 text-white text-lg font-semibold rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 shadow-lg">
+                Submit All Scores
+            </button>
+        </div>
+
+        <!-- Rankings Section -->
+        <div class="mt-8 bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="px-8 py-5 border-b border-gray-200 bg-gray-50">
+                <h2 class="text-2xl font-bold text-gray-800">Current Rankings</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200" id="rankings-table">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th scope="col" class="px-8 py-4 text-left text-lg font-bold text-gray-700">Rank</th>
+                            <th scope="col" class="px-8 py-4 text-left text-lg font-bold text-gray-700">Participant</th>
+                            <th scope="col" class="px-8 py-4 text-right text-lg font-bold text-gray-700">Total Score</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for participant in participants %}
+                        <tr class="hover:bg-gray-50" data-participant-id="{{ participant.id }}">
+                            <td class="px-8 py-6 whitespace-nowrap text-xl font-bold text-gray-900 ranking-position"></td>
+                            <td class="px-8 py-6 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="text-xl font-semibold text-gray-900">{{ participant.name }}</div>
+                                    <div class="ml-3 text-lg text-gray-600">#{{ participant.number }}</div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6 whitespace-nowrap text-right text-2xl font-bold text-emerald-600 participant-total" 
+                                data-participant-id="{{ participant.id }}">0.0</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <!-- Scoring Unavailable Card -->
+        <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">Scoring is Currently Unavailable</h2>
+            <p class="text-xl text-gray-600">The round must be ongoing to submit scores.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Success Dialog -->
+<div id="successDialog" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-6 border w-96 shadow-lg rounded-lg bg-white">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Success!</h3>
+            <p class="text-sm text-gray-500 mb-6">All scores have been submitted successfully.</p>
+            <div class="mt-4">
+                <button id="closeSuccessBtn" type="button" 
+                        class="w-full inline-flex justify-center px-4 py-2 bg-emerald-600 text-white text-base font-medium rounded-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 sm:text-sm">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add roundId to the global scope
+const roundId = {{ round.id }};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize total scores for all participants
+    document.querySelectorAll('tr[data-participant-id]').forEach(row => {
+        const participantId = row.dataset.participantId;
+        calculateTotalScore(participantId);
+    });
+
+    // Add input event listeners to all score inputs
+    document.querySelectorAll('input[name^="score_"]').forEach(input => {
+        input.addEventListener('input', function() {
+            const participantId = this.dataset.participantId;
+            calculateTotalScore(participantId);
+        });
+    });
+
+    function validateScore(input) {
+        const maxScore = parseFloat(input.dataset.maxScore);
+        const value = parseFloat(input.value);
+        const errorDiv = input.parentElement.querySelector('.score-error');
+        
+        if (isNaN(value)) {
+            errorDiv.textContent = 'Please enter a valid number';
+            errorDiv.classList.remove('hidden');
+            input.classList.add('border-red-500');
+            return false;
+        }
+        
+        if (value < 0) {
+            errorDiv.textContent = 'Score cannot be negative';
+            errorDiv.classList.remove('hidden');
+            input.classList.add('border-red-500');
+            return false;
+        }
+        
+        if (value > maxScore) {
+            errorDiv.textContent = `Maximum score is ${maxScore}`;
+            errorDiv.classList.remove('hidden');
+            input.classList.add('border-red-500');
+            return false;
+        }
+        
+        errorDiv.classList.add('hidden');
+        input.classList.remove('border-red-500');
+        return true;
+    }
+
+    function calculateTotalScore(participantId) {
+        const inputs = document.querySelectorAll(`input[name^="score_${participantId}_"]`);
+        let total = 0;
+        let isValid = true;
+        
+        inputs.forEach(input => {
+            if (!validateScore(input)) {
+                isValid = false;
+            } else {
+                const value = parseFloat(input.value) || 0;
+                total += value;
+            }
+        });
+        
+        // Update total score in both tables
+        const totalElements = document.querySelectorAll(`[id^="total-score-${participantId}"], .participant-total[data-participant-id="${participantId}"]`);
+        totalElements.forEach(element => {
+            if (isValid) {
+                element.textContent = total.toFixed(2);
+                element.classList.remove('text-red-500');
+            } else {
+                element.textContent = '---';
+                element.classList.add('text-red-500');
+            }
+        });
+        
+        updateRankings();
+    }
+
+    function updateRankings() {
+        // Get all rows from rankings table
+        const rows = Array.from(document.querySelectorAll('#rankings-table tbody tr'));
+        
+        // Sort rows based on total scores (descending order)
+        rows.sort((a, b) => {
+            const scoreA = parseFloat(a.querySelector('.participant-total').textContent);
+            const scoreB = parseFloat(b.querySelector('.participant-total').textContent);
+            return scoreB - scoreA;
+        });
+
+        let currentRank = 1;
+        let previousScore = null;
+        let sameRankCount = 0;
+
+        // Update the ranking positions
+        rows.forEach((row, index) => {
+            const score = parseFloat(row.querySelector('.participant-total').textContent);
+            const rankingCell = row.querySelector('.ranking-position');
+            
+            if (score === previousScore) {
+                sameRankCount++;
+                rankingCell.textContent = currentRank;
+            } else {
+                currentRank = index + 1;
+                rankingCell.textContent = currentRank;
+                sameRankCount = 0;
+            }
+            
+            previousScore = score;
+            
+            // Move the row to its new position
+            row.parentNode.appendChild(row);
+        });
+    }
+
+    function submitAllScores() {
+        // Collect all scores
+        const scores = [];
+        let hasErrors = false;
+
+        document.querySelectorAll('input[name^="score_"]').forEach(input => {
+            if (!validateScore(input)) {
+                hasErrors = true;
+                return;
+            }
+
+            const [_, participantId, criterionId] = input.name.split('_');
+            if (participantId && criterionId) {
+                scores.push({
+                    participant_id: parseInt(participantId),
+                    criterion_id: parseInt(criterionId),
+                    score: parseFloat(input.value) || 0
+                });
+            }
+        });
+
+        if (hasErrors) {
+            alert('Please correct all errors before submitting.');
+            return;
+        }
+
+        if (scores.length === 0) {
+            alert('No scores to submit.');
+            return;
+        }
+
+        // Disable submit button to prevent double submission
+        const submitBtn = document.getElementById('submitAllBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Get CSRF token
+        const csrftoken = getCookie('csrftoken');
+        if (!csrftoken) {
+            alert('CSRF token not found. Please refresh the page.');
+            return;
+        }
+
+        // Send scores to server
+        fetch(`/round/${roundId}/submit-batch-scores/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(scores)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                // Show success message
+                showSuccessDialog();
+                
+                // Disable all score inputs
+                document.querySelectorAll('input[name^="score_"]').forEach(input => {
+                    input.readOnly = true;
+                    input.classList.add('bg-gray-100');
+                });
+                
+                // Hide action buttons
+                const actionButtons = document.getElementById('actionButtons');
+                if (actionButtons) {
+                    actionButtons.style.display = 'none';
+                }
+            } else {
+                throw new Error(data.message || 'Error submitting scores');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error submitting scores: ' + error.message);
+            
+            // Re-enable submit button on error
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+    }
+
+    // Add event listener for submit button
+    const submitBtn = document.getElementById('submitAllBtn');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', submitAllScores);
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showSuccessDialog() {
+        const dialog = document.getElementById('successDialog');
+        const closeBtn = document.getElementById('closeSuccessBtn');
+        
+        if (dialog) {
+            dialog.classList.remove('hidden');
+            
+            // Add click event to close button
+            if (closeBtn) {
+                closeBtn.onclick = hideSuccessDialog;
+            }
+            
+            // Add click event to close dialog when clicking outside
+            dialog.onclick = function(e) {
+                if (e.target === dialog) {
+                    hideSuccessDialog();
+                }
+            };
+            
+            // Add escape key to close dialog
+            document.onkeydown = function(e) {
+                if (e.key === 'Escape') {
+                    hideSuccessDialog();
+                }
+            };
+        }
+    }
+
+    function hideSuccessDialog() {
+        const dialog = document.getElementById('successDialog');
+        const closeBtn = document.getElementById('closeSuccessBtn');
+        
+        if (dialog) {
+            dialog.classList.add('hidden');
+            
+            // Remove all event listeners
+            if (closeBtn) {
+                closeBtn.onclick = null;
+            }
+            dialog.onclick = null;
+            document.onkeydown = null;
+            
+            // Refresh the page to show updated state
+            location.reload();
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}All Judges{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 py-12">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">All Judges</h1>
+                    <p class="mt-2 text-lg text-gray-600">View all registered judges in the system</p>
+                </div>
+                <div>
+                    <a href="{% url 'judge_management' %}" 
+                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl 
+                              shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 
+                              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 mr-3">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back to Judge Management
+                    </a>
+                    <a href="{% url 'add_judge' %}" 
+                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl 
+                              shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 
+                              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-plus mr-2"></i>
+                        Add Judge
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Judges Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for judge in judges %}
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow">
+                <div class="p-6">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <img src="{{ judge.get_profile_image_url }}" 
+                             alt="{{ judge.user.get_full_name }}" 
+                             class="h-16 w-16 rounded-full object-cover">
+                        <div class="flex-grow">
+                            <h3 class="text-xl font-semibold text-gray-900">{{ judge.user.get_full_name }}</h3>
+                            <p class="text-sm text-gray-500">{{ judge.user.email }}</p>
+                        </div>
+                        <form action="{% url 'delete_judge' judge.id %}" method="POST" class="delete-judge-form" 
+                              onsubmit="return confirm('Are you sure you want to delete this judge? This action cannot be undone.');">
+                            {% csrf_token %}
+                            <button type="submit" 
+                                    class="text-red-600 hover:text-red-800 focus:outline-none">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="space-y-3 mb-6">
+                        {% if judge.expertise %}
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-star mr-2 w-5"></i>
+                            <span>{{ judge.expertise }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if judge.phone %}
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-phone mr-2 w-5"></i>
+                            <span>{{ judge.phone }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="flex items-center text-sm">
+                            <i class="fas fa-circle mr-2 w-5 {% if judge.status == 'ACTIVE' %}text-green-500{% else %}text-gray-500{% endif %}"></i>
+                            <span class="{% if judge.status == 'ACTIVE' %}text-green-600{% else %}text-gray-600{% endif %}">
+                                {{ judge.status }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if judge.bio %}
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">Bio</h4>
+                        <p class="text-sm text-gray-600">{{ judge.bio|truncatewords:50 }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full bg-white rounded-2xl shadow-xl p-8 text-center">
+                <i class="fas fa-user-slash text-4xl text-gray-400 mb-4"></i>
+                <p class="text-gray-600">No judges found in the system.</p>
+                <p class="text-sm text-gray-500 mt-2">Add judges to see them listed here.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

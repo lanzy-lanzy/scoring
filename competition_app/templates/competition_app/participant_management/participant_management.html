@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Participant Management{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 py-12">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Participant Management</h1>
+                    <p class="mt-2 text-lg text-gray-600">Manage participants across all competitions</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'participant_list' %}" 
+                       class="inline-flex items-center px-6 py-3 border border-emerald-600 text-base font-medium rounded-md shadow-sm text-emerald-600 bg-white hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                        <i class="fas fa-users mr-2"></i>
+                        View All Participants
+                    </a>
+                    <a href="{% url 'create_participant' %}" 
+                       class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                        <i class="fas fa-plus mr-2"></i>
+                        Create New Participant
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Competition List -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="px-8 py-6 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900">Competitions</h2>
+                <p class="mt-1 text-sm text-gray-500">Select a competition to manage its participants</p>
+            </div>
+            
+            <div class="divide-y divide-gray-200">
+                {% for competition in competitions %}
+                <div class="p-8 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">{{ competition.name }}</h3>
+                            <div class="mt-2 flex items-center text-sm text-gray-500">
+                                <i class="fas fa-calendar mr-2"></i>
+                                {{ competition.start_date|date:"M d, Y" }} - {{ competition.end_date|date:"M d, Y" }}
+                            </div>
+                            <div class="mt-2 flex items-center text-sm text-gray-500">
+                                <i class="fas fa-users mr-2"></i>
+                                {{ competition.participants.count }} Participants
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <a href="{% url 'manage_participants' competition.id %}"
+                               class="inline-flex items-center px-4 py-2 border border-emerald-600 rounded-md shadow-sm text-sm font-medium text-emerald-600 bg-white hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                                <i class="fas fa-user-cog mr-2"></i>
+                                Manage Participants
+                            </a>
+                            <a href="{% url 'assign_participants' competition.id %}"
+                               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                                <i class="fas fa-user-plus mr-2"></i>
+                                Assign Participants
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center">
+                    <i class="fas fa-trophy text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">No competitions found.</p>
+                    <p class="text-sm text-gray-500 mt-2">
+                        <a href="{% url 'create_competition' %}" class="text-emerald-600 hover:text-emerald-900">
+                            Create a competition
+                        </a>
+                        to start managing participants.
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

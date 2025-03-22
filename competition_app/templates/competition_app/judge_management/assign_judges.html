@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Assign Judges - {{ competition.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 py-12">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Assign Judges</h1>
+                    <p class="mt-2 text-lg text-gray-600">{{ competition.name }}</p>
+                </div>
+                <a href="{% url 'manage_judges' competition.id %}" 
+                   class="text-emerald-600 hover:text-emerald-900">
+                    &larr; Back to Judge Management
+                </a>
+            </div>
+        </div>
+
+        <!-- Assignment Form -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <form method="POST" class="space-y-8">
+                {% csrf_token %}
+                
+                <!-- Judge Selection -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Select Judges</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for judge in available_judges %}
+                        <label class="relative flex items-start p-4 rounded-lg border hover:border-emerald-500 cursor-pointer">
+                            <div class="flex items-center h-5">
+                                <input type="checkbox" 
+                                       name="judges" 
+                                       value="{{ judge.id }}"
+                                       class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                            </div>
+                            <div class="ml-3">
+                                <div class="flex items-center">
+                                    {% if judge.profile_image %}
+                                    <img src="{{ judge.profile_image.url }}" 
+                                         class="w-8 h-8 rounded-full mr-2">
+                                    {% endif %}
+                                    <div>
+                                        <p class="font-medium text-gray-900">{{ judge.user.get_full_name }}</p>
+                                        <p class="text-sm text-gray-500">{{ judge.user.email }}</p>
+                                    </div>
+                                </div>
+                                {% if judge.expertise %}
+                                <p class="mt-1 text-sm text-gray-500">{{ judge.expertise }}</p>
+                                {% endif %}
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Round Selection -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Select Rounds</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for round in competition_rounds %}
+                        <label class="relative flex items-start p-4 rounded-lg border hover:border-emerald-500 cursor-pointer">
+                            <div class="flex items-center h-5">
+                                <input type="checkbox" 
+                                       name="rounds" 
+                                       value="{{ round.id }}"
+                                       class="h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                            </div>
+                            <div class="ml-3">
+                                <p class="font-medium text-gray-900">{{ round.name }}</p>
+                                <p class="text-sm text-gray-500">Order: #{{ round.order }}</p>
+                                <span class="inline-flex mt-1 items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if round.status == 'ONGOING' %}
+                                        bg-yellow-100 text-yellow-800
+                                    {% elif round.status == 'COMPLETED' %}
+                                        bg-green-100 text-green-800
+                                    {% else %}
+                                        bg-gray-100 text-gray-800
+                                    {% endif %}">
+                                    {{ round.status }}
+                                </span>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end">
+                    <button type="submit"
+                            class="px-6 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors">
+                        Assign Selected Judges
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

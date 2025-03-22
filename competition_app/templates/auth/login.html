@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Scoring System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-emerald-700 via-emerald-600 to-emerald-500 min-h-screen">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="max-w-md w-full mx-4">
+            <!-- Logo Section -->
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-bold text-white mb-2">Scoring System</h2>
+                <p class="text-emerald-200">Judge Portal Login</p>
+            </div>
+
+            <!-- Login Card -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 transform transition-all duration-200 hover:scale-105">
+                {% if error_message %}
+                <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+                        <p class="text-red-700">{{ error_message }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <form method="POST" class="space-y-6">
+                    {% csrf_token %}
+                    <div class="transform transition-all duration-200 hover:scale-105">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <i class="fas fa-user text-emerald-500"></i>
+                            </span>
+                            <input type="text" name="username" required value="{{ username|default:'' }}"
+                                   class="w-full pl-10 px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200
+                                          {% if error_message %}border-red-300 focus:border-red-500 focus:ring-red-500/20{% endif %}">
+                        </div>
+                    </div>
+
+                    <div class="transform transition-all duration-200 hover:scale-105">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <i class="fas fa-lock text-emerald-500"></i>
+                            </span>
+                            <input type="password" name="password" required
+                                   class="w-full pl-10 px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200
+                                          {% if error_message %}border-red-300 focus:border-red-500 focus:ring-red-500/20{% endif %}">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="remember" class="h-4 w-4 text-emerald-600 rounded focus:ring-emerald-500">
+                            <label for="remember" class="ml-2 text-sm text-gray-600">Remember me</label>
+                        </div>
+                        <a href="#" class="text-sm text-emerald-600 hover:text-emerald-700"><i class="fas fa-key mr-1"></i>Forgot password?</a>
+                    </div>
+
+                    <button type="submit"
+                            class="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl hover:from-emerald-700 hover:to-emerald-800 transform transition-all duration-200 hover:scale-105 shadow-lg">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-600">
+                        Don't have an account? 
+                        <a href="{% url 'register' %}" class="text-emerald-600 hover:text-emerald-700 font-medium"><i class="fas fa-user-plus mr-1"></i>Register here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

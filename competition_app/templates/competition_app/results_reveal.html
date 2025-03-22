@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Results Reveal - {{ competition.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-emerald-700 via-emerald-600 to-emerald-500 py-8">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Dramatic Header -->
+        <div class="text-center mb-12 reveal-section">
+            <h1 class="text-5xl font-bold text-white mb-4 animate-pulse">{{ competition.name }}</h1>
+            <p class="text-2xl text-emerald-200">Final Results Reveal</p>
+        </div>
+
+        <!-- Countdown Timer -->
+        <div id="countdown" class="text-center mb-16">
+            <div class="text-6xl font-bold text-white" id="timer">10</div>
+            <p class="text-emerald-200 mt-2">Seconds until reveal</p>
+        </div>
+
+        <!-- Hidden Results Section -->
+        <div id="results" class="hidden space-y-8">
+            <!-- Winners Podium -->
+            <div class="grid grid-cols-3 gap-4 mb-16">
+                <!-- Second Place -->
+                <div class="transform translate-y-8">
+                    <div class="bg-gradient-to-b from-emerald-300 to-emerald-400 rounded-t-2xl p-6 text-center">
+                        <div class="text-3xl font-bold mb-2">2nd</div>
+                        <div class="participant-card hidden">
+                            {% if second_place.participant.profile_image %}
+                                <img src="{{ second_place.participant.profile_image.url }}" 
+                                     class="w-24 h-24 mx-auto rounded-full border-4 border-white mb-3">
+                            {% else %}
+                                <div class="w-24 h-24 rounded-full bg-emerald-600 flex items-center justify-center text-white text-2xl font-bold mx-auto mb-3 border-4 border-white">
+                                    {{ second_place.participant.name|make_list|first|upper }}
+                                </div>
+                            {% endif %}
+                            <h3 class="text-xl font-bold">{{ second_place.participant.name }}</h3>
+                            <p class="text-2xl font-bold mt-2">{{ second_place.total_score }}</p>
+                        </div>
+                    </div>
+                    <div class="h-32 bg-emerald-300"></div>
+                </div>
+
+                <!-- First Place -->
+                <div class="transform -translate-y-8">
+                    <div class="bg-gradient-to-b from-emerald-400 to-emerald-500 rounded-t-2xl p-8 text-center">
+                        <div class="text-4xl font-bold mb-4">👑 1st</div>
+                        <div class="participant-card hidden">
+                            {% if first_place.participant.profile_image %}
+                                <img src="{{ first_place.participant.profile_image.url }}" 
+                                     class="w-32 h-32 mx-auto rounded-full border-4 border-white mb-4">
+                            {% else %}
+                                <div class="w-32 h-32 rounded-full bg-emerald-600 flex items-center justify-center text-white text-3xl font-bold mx-auto mb-4 border-4 border-white">
+                                    {{ first_place.participant.name|make_list|first|upper }}
+                                </div>
+                            {% endif %}
+                            <h3 class="text-2xl font-bold">{{ first_place.participant.name }}</h3>
+                            <p class="text-3xl font-bold mt-3">{{ first_place.total_score }}</p>
+                        </div>
+                    </div>
+                    <div class="h-40 bg-emerald-400"></div>
+                </div>
+
+                <!-- Third Place -->
+                <div class="transform translate-y-16">
+                    <div class="bg-gradient-to-b from-emerald-600 to-emerald-700 rounded-t-2xl p-4 text-center">
+                        <div class="text-2xl font-bold mb-2">3rd</div>
+                        <div class="participant-card hidden">
+                            {% if third_place.participant.profile_image %}
+                                <img src="{{ third_place.participant.profile_image.url }}" 
+                                     class="w-20 h-20 mx-auto rounded-full border-4 border-white mb-2">
+                            {% else %}
+                                <div class="w-20 h-20 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xl font-bold mx-auto mb-2 border-4 border-white">
+                                    {{ third_place.participant.name|make_list|first|upper }}
+                                </div>
+                            {% endif %}
+                            <h3 class="text-lg font-bold">{{ third_place.participant.name }}</h3>
+                            <p class="text-xl font-bold mt-2">{{ third_place.total_score }}</p>
+                        </div>
+                    </div>
+                    <div class="h-24 bg-emerald-600"></div>
+                </div>
+            </div>
+
+            <!-- Full Rankings Table -->
+            <div class="bg-white bg-opacity-10 rounded-2xl p-6 backdrop-blur-lg">
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-emerald-200 border-b border-emerald-500">
+                            <th class="py-3">Rank</th>
+                            <th>Participant</th>
+                            <th>Score</th>
+                            <th>Judges' Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-white">
+                        {% for result in results %}
+                        <tr class="participant-row hidden border-b border-emerald-500/30 hover:bg-white/5">
+                            <td class="py-4 text-center font-bold">{{ result.rank }}</td>
+                            <td class="flex items-center space-x-3">
+                                {% if result.participant.profile_image %}
+                                    <img src="{{ result.participant.profile_image.url }}" 
+                                         class="w-10 h-10 rounded-full">
+                                {% else %}
+                                    <div class="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white text-lg font-bold">
+                                        {{ result.participant.name|make_list|first|upper }}
+                                    </div>
+                                {% endif %}
+                                <span>{{ result.participant.name }}</span>
+                            </td>
+                            <td class="text-center">{{ result.total_score }}</td>
+                            <td class="text-sm italic">{{ result.remarks }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+              <!-- Judges Panel -->
+              <div class="mt-12">
+                  <h2 class="text-2xl font-bold text-white mb-6">Judging Panel</h2>
+                  <div class="grid grid-cols-4 gap-6">
+                      {% for judge in judges %}
+                      <div class="judge-card hidden bg-white/10 rounded-xl p-4 backdrop-blur-sm">
+                          <img src="{{ judge.profile_image.url }}" 
+                             alt="{{ judge.user.get_full_name }}"
+                             class="w-20 h-20 mx-auto rounded-full mb-3 object-cover">
+                          <h3 class="text-white text-center font-medium">{{ judge.user.get_full_name }}</h3>
+                          <p class="text-emerald-200 text-center text-sm">{{ judge.expertise }}</p>
+                      </div>
+                      {% endfor %}
+                  </div>
+              </div>
+          </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let timeLeft = 10;
+    const timer = document.getElementById('timer');
+    const countdown = document.getElementById('countdown');
+    const results = document.getElementById('results');
+
+    const countdownInterval = setInterval(() => {
+        timeLeft--;
+        timer.textContent = timeLeft;
+        
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            revealResults();
+        }
+    }, 1000);
+
+    function revealResults() {
+        countdown.classList.add('hidden');
+        results.classList.remove('hidden');
+        
+        // Reveal winners with delay
+        setTimeout(() => {
+            document.querySelectorAll('.participant-card').forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.remove('hidden');
+                    card.classList.add('animate-fade-in');
+                }, index * 1000);
+            });
+        }, 1000);
+
+        // Reveal rankings
+        setTimeout(() => {
+            document.querySelectorAll('.participant-row').forEach((row, index) => {
+                setTimeout(() => {
+                    row.classList.remove('hidden');
+                    row.classList.add('animate-slide-in');
+                }, index * 200);
+            });
+        }, 4000);
+
+        // Reveal judges
+        setTimeout(() => {
+            document.querySelectorAll('.judge-card').forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.remove('hidden');
+                    card.classList.add('animate-fade-in');
+                }, index * 300);
+            });
+        }, 6000);
+    }
+});
+</script>
+
+<style>
+.animate-fade-in {
+    animation: fadeIn 1s ease-out forwards;
+}
+
+.animate-slide-in {
+    animation: slideIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block title %}Assign Participants - {{ competition.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 py-12">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Assign Participants</h1>
+                    <p class="mt-2 text-lg text-gray-600">{{ competition.name|title }}</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'create_participant' %}?next={{ request.path|urlencode }}" 
+                       class="inline-flex items-center px-4 py-2 border border-emerald-600 rounded-lg text-emerald-600 hover:bg-emerald-50">
+                        <i class="fas fa-plus mr-2"></i>
+                        Add New Participant
+                    </a>
+                    <a href="{% url 'manage_participants' competition.id %}" 
+                       class="text-emerald-600 hover:text-emerald-900">
+                        &larr; Back to Management
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assignment Form -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <form method="POST" class="space-y-8" id="assignForm">
+                {% csrf_token %}
+                
+                <!-- Search and Filter Section -->
+                <div class="space-y-4">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1">
+                            <input type="text" 
+                                   id="searchParticipant" 
+                                   placeholder="Search participants..." 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div class="flex space-x-2">
+                            <button type="button" 
+                                    id="selectAll" 
+                                    class="px-4 py-2 text-emerald-600 border border-emerald-600 rounded-lg hover:bg-emerald-50">
+                                Select All
+                            </button>
+                            <button type="button" 
+                                    id="clearAll" 
+                                    class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="flex flex-wrap gap-4 p-4 bg-gray-50 rounded-lg">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Gender Filter</label>
+                            <select id="genderFilter" class="rounded-md border-gray-300 focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="all">All Genders</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                                <option value="prefer_not_to_say">Prefer not to say</option>
+                            </select>
+                        </div>
+                        {% if age_ranges %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Age Range</label>
+                            <select id="ageFilter" class="rounded-md border-gray-300 focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="all">All Ages</option>
+                                {% for range in age_ranges %}
+                                <option value="{{ range.start }}-{{ range.end }}">{{ range.start }}-{{ range.end }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Selection Summary -->
+                <div id="selectionSummary" class="hidden bg-emerald-50 p-4 rounded-lg">
+                    <p class="text-emerald-800">
+                        <span id="selectedCount">0</span> out of {{ total_available }} participants selected
+                    </p>
+                </div>
+
+                <!-- Participant Groups -->
+                <div class="space-y-8">
+                    {% for gender, participants in grouped_participants.items %}
+                    {% if participants %}
+                    <div class="participant-group" data-gender="{{ gender }}">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                            <span class="mr-2">
+                                {% if gender == 'male' %}
+                                <i class="fas fa-mars text-blue-500"></i>
+                                Male
+                                {% elif gender == 'female' %}
+                                <i class="fas fa-venus text-pink-500"></i>
+                                Female
+                                {% elif gender == 'other' %}
+                                <i class="fas fa-transgender text-purple-500"></i>
+                                Other
+                                {% else %}
+                                <i class="fas fa-user text-gray-500"></i>
+                                Prefer not to say
+                                {% endif %}
+                            </span>
+                            <span class="text-sm text-gray-500 ml-2">({{ participants.count }} participants)</span>
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {% for participant in participants %}
+                            <label class="participant-card relative flex items-start p-4 rounded-lg border hover:border-emerald-500 cursor-pointer transition-all duration-200" 
+                                   data-name="{{ participant.name|lower }}"
+                                   data-gender="{{ participant.gender }}"
+                                   data-age="{{ participant.age|default:'' }}">
+                                <div class="flex items-center h-5">
+                                    <input type="checkbox" 
+                                           name="participants" 
+                                           value="{{ participant.id }}"
+                                           class="participant-checkbox h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                                </div>
+                                <div class="ml-3 flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            {% if participant.profile_image %}
+                                            <img src="{{ participant.profile_image.url }}" 
+                                                 alt="{{ participant.name }}"
+                                                 class="w-8 h-8 rounded-full mr-2 object-cover">
+                                            {% else %}
+                                            <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center mr-2">
+                                                <i class="fas fa-user text-emerald-600"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <p class="font-medium text-gray-900">{{ participant.name }}</p>
+                                                <div class="text-sm text-gray-500">
+                                                    {% if participant.email %}
+                                                    <p>{{ participant.email }}</p>
+                                                    {% endif %}
+                                                    <div class="flex items-center gap-2 mt-1">
+                                                        <span class="flex items-center">
+                                                            {% if participant.gender == 'male' %}
+                                                            <i class="fas fa-mars text-blue-500 mr-1"></i>
+                                                            <span>Male</span>
+                                                            {% elif participant.gender == 'female' %}
+                                                            <i class="fas fa-venus text-pink-500 mr-1"></i>
+                                                            <span>Female</span>
+                                                            {% elif participant.gender == 'other' %}
+                                                            <i class="fas fa-transgender text-purple-500 mr-1"></i>
+                                                            <span>Other</span>
+                                                            {% else %}
+                                                            <i class="fas fa-user text-gray-500 mr-1"></i>
+                                                            <span>Not specified</span>
+                                                            {% endif %}
+                                                        </span>
+                                                        {% if participant.age %}
+                                                        <span class="flex items-center">
+                                                            <i class="fas fa-birthday-cake text-gray-400 mr-1"></i>
+                                                            {{ participant.age }} years
+                                                        </span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if participant.bio %}
+                                    <p class="mt-2 text-sm text-gray-500 line-clamp-2">{{ participant.bio }}</p>
+                                    {% endif %}
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end">
+                    <button type="submit"
+                            class="px-6 py-3 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-colors">
+                        Assign Selected Participants
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchParticipant');
+    const selectAllBtn = document.getElementById('selectAll');
+    const clearAllBtn = document.getElementById('clearAll');
+    const genderFilter = document.getElementById('genderFilter');
+    const ageFilter = document.getElementById('ageFilter');
+    const checkboxes = document.querySelectorAll('.participant-checkbox');
+    const selectionSummary = document.getElementById('selectionSummary');
+    const selectedCountSpan = document.getElementById('selectedCount');
+    
+    function updateSelectionSummary() {
+        const selectedCount = document.querySelectorAll('.participant-checkbox:checked').length;
+        selectedCountSpan.textContent = selectedCount;
+        selectionSummary.classList.toggle('hidden', selectedCount === 0);
+    }
+    
+    function filterParticipants() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedGender = genderFilter.value;
+        const selectedAgeRange = ageFilter.value;
+        
+        document.querySelectorAll('.participant-card').forEach(card => {
+            const name = card.dataset.name;
+            const gender = card.dataset.gender;
+            const age = parseInt(card.dataset.age) || 0;
+            
+            let show = name.includes(searchTerm);
+            
+            // Apply gender filter
+            if (selectedGender !== 'all') {
+                show = show && gender === selectedGender;
+            }
+            
+            // Apply age filter
+            if (selectedAgeRange !== 'all') {
+                const [minAge, maxAge] = selectedAgeRange.split('-').map(Number);
+                show = show && age >= minAge && age <= maxAge;
+            }
+            
+            card.style.display = show ? '' : 'none';
+        });
+        
+        // Show/hide group headers based on visible cards
+        document.querySelectorAll('.participant-group').forEach(group => {
+            const visibleCards = group.querySelectorAll('.participant-card[style=""]').length;
+            group.style.display = visibleCards > 0 ? '' : 'none';
+        });
+    }
+    
+    searchInput.addEventListener('input', filterParticipants);
+    genderFilter.addEventListener('change', filterParticipants);
+    if (ageFilter) {
+        ageFilter.addEventListener('change', filterParticipants);
+    }
+    
+    selectAllBtn.addEventListener('click', function() {
+        const visibleCheckboxes = Array.from(checkboxes).filter(
+            checkbox => checkbox.closest('.participant-card').style.display !== 'none'
+        );
+        const allChecked = visibleCheckboxes.every(checkbox => checkbox.checked);
+        visibleCheckboxes.forEach(checkbox => checkbox.checked = !allChecked);
+        updateSelectionSummary();
+    });
+    
+    clearAllBtn.addEventListener('click', function() {
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+        updateSelectionSummary();
+    });
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectionSummary);
+    });
+    
+    updateSelectionSummary();
+});
+</script>
+{% endblock %}

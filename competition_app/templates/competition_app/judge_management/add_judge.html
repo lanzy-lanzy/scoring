@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Judge{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 py-12">
+    <div class="max-w-3xl mx-auto px-4">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-user-plus text-emerald-600 mr-3"></i>
+                        Add New Judge
+                    </h1>
+                    <p class="mt-2 text-lg text-gray-600">Create a new judge account for the competition system</p>
+                </div>
+                <div>
+                    <a href="{% url 'view_all_judges' %}" 
+                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-xl 
+                              shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 
+                              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back to Judges List
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <form method="POST" enctype="multipart/form-data" class="space-y-8">
+                {% csrf_token %}
+                
+                <!-- User Account Section -->
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <div class="flex items-center mb-6">
+                        <i class="fas fa-user-circle text-2xl text-blue-600 mr-3"></i>
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Account Information</h3>
+                            <p class="text-sm text-gray-500 mt-1">Basic information for judge's account access</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% for field in user_form %}
+                        <div class="{% if field.name in 'password1,password2' or field.name == 'email' %}col-span-2{% endif %}">
+                            <div class="flex items-center justify-between">
+                                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-900 mb-1">
+                                    {{ field.label }}
+                                    {% if field.field.required %}
+                                        <span class="text-red-500 ml-1">*</span>
+                                    {% endif %}
+                                </label>
+                                {% if field.help_text %}
+                                <span class="text-xs text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    {{ field.help_text|safe }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            {{ field }}
+                            {% if field.errors %}
+                            <p class="mt-1 text-sm text-red-600 flex items-center">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                {{ field.errors.0 }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Judge Profile Section -->
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <div class="flex items-center mb-6">
+                        <i class="fas fa-id-card text-2xl text-blue-600 mr-3"></i>
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Profile Information</h3>
+                            <p class="text-sm text-gray-500 mt-1">Professional details and contact information</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% for field in judge_form %}
+                        <div class="{% if field.name in 'bio,profile_image' %}col-span-2{% endif %}">
+                            <div class="flex items-center justify-between">
+                                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-900 mb-1">
+                                    {{ field.label }}
+                                    {% if field.field.required %}
+                                        <span class="text-red-500 ml-1">*</span>
+                                    {% endif %}
+                                </label>
+                                {% if field.help_text %}
+                                <span class="text-xs text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    {{ field.help_text }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% if field.name == 'profile_image' %}
+                            <div class="mt-1 flex items-center">
+                                <span class="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100">
+                                    <i class="fas fa-user text-gray-300 flex items-center justify-center h-full text-xl"></i>
+                                </span>
+                                <div class="ml-5 flex-grow">
+                                    {{ field }}
+                                </div>
+                            </div>
+                            {% else %}
+                                {{ field }}
+                            {% endif %}
+                            {% if field.errors %}
+                            <p class="mt-1 text-sm text-red-600 flex items-center">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                {{ field.errors.0 }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end pt-4">
+                    <button type="submit" 
+                            class="inline-flex items-center px-6 py-3 border border-transparent rounded-xl 
+                                   shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 
+                                   focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+                                   transition-all transform hover:scale-105">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Add Judge
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Style form inputs */
+    form input[type="text"],
+    form input[type="email"],
+    form input[type="password"],
+    form textarea,
+    form select {
+        @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+               focus:border-blue-500 focus:ring-blue-500 sm:text-sm
+               transition-colors;
+    }
+
+    /* Add hover effect to inputs */
+    form input[type="text"]:hover,
+    form input[type="email"]:hover,
+    form input[type="password"]:hover,
+    form textarea:hover,
+    form select:hover {
+        @apply border-blue-300;
+    }
+
+    /* Style file input */
+    form input[type="file"] {
+        @apply mt-1 block w-full text-sm text-gray-500 
+               file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 
+               file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 
+               hover:file:bg-blue-100 transition-colors cursor-pointer;
+    }
+
+    /* Add field focus highlight effect */
+    .field-focus-within {
+        @apply ring-2 ring-blue-500 ring-opacity-50;
+    }
+</style>
+
+<script>
+    // Add focus highlight effect to form fields
+    document.querySelectorAll('input, textarea, select').forEach(field => {
+        field.addEventListener('focus', () => {
+            field.closest('div').classList.add('field-focus-within');
+        });
+        field.addEventListener('blur', () => {
+            field.closest('div').classList.remove('field-focus-within');
+        });
+    });
+</script>
+{% endblock %}

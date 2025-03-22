@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 py-12">
+    <div class="max-w-4xl mx-auto px-4">
+        <div class="bg-white shadow-xl rounded-2xl p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Profile</h2>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="flex justify-center">
+                            {% if user.is_judge %}
+                                <img class="w-32 h-32 rounded-full border-4 border-emerald-200" src="{{ user.judge.get_profile_image_url }}" alt="Profile photo">
+                            {% else %}
+                                <img class="w-32 h-32 rounded-full border-4 border-emerald-200" src="https://ui-avatars.com/api/?name={{ user.username }}" alt="Profile photo">
+                            {% endif %}
+                        </div>
+                        <div class="transform transition-all duration-200 hover:scale-105">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                            <input type="text" name="username" value="{{ user.username }}" 
+                                   class="mt-1 block w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200">
+                        </div>
+                        <div class="transform transition-all duration-200 hover:scale-105">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" name="email" value="{{ user.email }}" 
+                                   class="mt-1 block w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200">
+                        </div>
+                        <div class="transform transition-all duration-200 hover:scale-105">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Profile Image</label>
+                            <input type="file" name="profile_image" 
+                                   class="mt-1 block w-full px-4 py-3 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200">
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <button type="submit" 
+                            class="px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl hover:from-emerald-700 hover:to-emerald-800 transform transition-all duration-200 hover:scale-105 shadow-lg">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

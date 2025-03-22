@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ competition.name }} - Details{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100 py-12">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ competition.name }}</h1>
+                    <p class="mt-2 text-lg text-gray-600">{{ competition.description }}</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'manage_participants' competition.id %}" 
+                       class="inline-flex items-center px-4 py-2 border border-emerald-600 rounded-md shadow-sm text-sm font-medium text-emerald-600 bg-white hover:bg-emerald-50">
+                        <i class="fas fa-users mr-2"></i>
+                        Manage Participants
+                    </a>
+                    <a href="{% url 'manage_judges' competition.id %}" 
+                       class="inline-flex items-center px-4 py-2 border border-emerald-600 rounded-md shadow-sm text-sm font-medium text-emerald-600 bg-white hover:bg-emerald-50">
+                        <i class="fas fa-gavel mr-2"></i>
+                        Manage Judges
+                    </a>
+                    <a href="{% url 'manage_rounds' competition.id %}" 
+                       class="inline-flex items-center px-4 py-2 border border-emerald-600 rounded-md shadow-sm text-sm font-medium text-emerald-600 bg-white hover:bg-emerald-50">
+                        <i class="fas fa-layer-group mr-2"></i>
+                        Manage Rounds
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Competition Status and Dates -->
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-sm font-medium text-gray-500">Status</div>
+                    <div class="mt-1">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                            {% if competition.status == 'ACTIVE' %}
+                                bg-green-100 text-green-800
+                            {% elif competition.status == 'COMPLETED' %}
+                                bg-blue-100 text-blue-800
+                            {% elif competition.status == 'CANCELLED' %}
+                                bg-red-100 text-red-800
+                            {% else %}
+                                bg-yellow-100 text-yellow-800
+                            {% endif %}">
+                            {{ competition.status }}
+                        </span>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-sm font-medium text-gray-500">Start Date</div>
+                    <div class="mt-1 text-lg font-semibold text-gray-900">
+                        {{ competition.start_date|date:"M d, Y" }}
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-sm font-medium text-gray-500">End Date</div>
+                    <div class="mt-1 text-lg font-semibold text-gray-900">
+                        {{ competition.end_date|date:"M d, Y" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rounds -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="px-8 py-6 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900">Competition Rounds</h2>
+                <p class="mt-1 text-sm text-gray-500">{{ rounds.count }} round{{ rounds.count|pluralize }} in total</p>
+            </div>
+            
+            <div class="divide-y divide-gray-200">
+                {% for round in rounds %}
+                <div class="p-8">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center">
+                                <span class="text-lg font-medium text-gray-900">Round {{ round.order }}:</span>
+                                <h3 class="ml-2 text-lg font-medium text-gray-900">{{ round.name }}</h3>
+                                <span class="ml-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                                    {% if round.status == 'PENDING' %}
+                                        bg-gray-100 text-gray-800
+                                    {% elif round.status == 'ONGOING' %}
+                                        bg-emerald-100 text-emerald-800
+                                    {% else %}
+                                        bg-blue-100 text-blue-800
+                                    {% endif %}">
+                                    {{ round.status }}
+                                </span>
+                            </div>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">{{ round.description }}</p>
+                            </div>
+                            <div class="mt-2 grid grid-cols-2 gap-4">
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-percentage mr-2"></i>
+                                    Weight: {{ round.weight_percentage }}%
+                                </div>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-list-check mr-2"></i>
+                                    {{ round.criteria.count }} Criteria
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Criteria List -->
+                    <div class="mt-6">
+                        <h4 class="text-sm font-medium text-gray-900">Scoring Criteria</h4>
+                        <div class="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {% for criterion in round.criteria.all %}
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="font-medium text-gray-900">{{ criterion.name }}</div>
+                                <p class="mt-1 text-sm text-gray-500">{{ criterion.description }}</p>
+                                <div class="mt-2 text-sm text-gray-500">
+                                    Max Score: {{ criterion.max_score }}
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-span-full text-sm text-gray-500 text-center py-4">
+                                No criteria defined for this round.
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center">
+                    <i class="fas fa-layer-group text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-600">No rounds defined for this competition.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

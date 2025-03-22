@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JHCSC Competition Management System</title>
+    {% load static %}
+   
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.css" rel="stylesheet" />
+    <script src="https://unpkg.com/heroicons@2.0.18/24/outline/index.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="min-h-screen bg-gradient-to-br from-emerald-600 to-emerald-800">
+        <!-- Hero Section -->
+        <div class="w-full px-6 py-16">
+            <div class="flex flex-col items-center justify-center space-y-8">
+                <!-- Logos Section with Animation -->
+                <div class="flex items-center space-x-12 animate-float">
+                    <img src="{% static 'images/jhcsc_logo.png' %}" alt="JHCSC Logo" class="w-32 h-32 animate-pulse shadow-lg rounded-full">
+                    <img src="{% static 'images/it_logo.png' %}" alt="IT Department Logo" class="w-32 h-32 animate-bounce shadow-lg rounded-full">
+                </div>
+
+                <!-- Main Title -->
+                <h1 class="text-6xl font-extrabold text-white text-center animate-fade-in relative">
+                    <span class="absolute -inset-0.5 text-white stroke-emerald-900 stroke-2 animate-pulse">SCORIFY</span>
+                    <span class="relative">SCORIFY</span>                    
+                    <span class="block text-emerald-100 mt-2 relative">
+                        <span class="absolute -inset-0.5 text-emerald-100 stroke-emerald-900 stroke-2 animate-pulse">Web-Based Judging Scoring System in JHCSC</span>
+                        <span class="relative">Web-Based Judging Scoring System in JHCSC</span>
+                    </span>
+                </h1>
+
+                <!-- Description -->
+                <p class="text-xl text-emerald-100 text-center max-w-2xl animate-slide-up">
+                    Empowering fair and efficient competition management for J.H. Cerilles State College
+                </p>
+
+                <!-- CTA Buttons -->
+                <div class="flex space-x-6 mt-8 animate-fade-in-up">
+                    <a href="{% url 'login' %}" class="px-8 py-4 bg-white text-emerald-700 rounded-full font-bold hover:bg-emerald-100 hover:text-emerald-800 transform hover:scale-105 transition-all shadow-md">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login to System
+                    </a>
+                    <a href="{% url 'register' %}" class="px-8 py-4 border-2 border-white text-white rounded-full font-bold hover:bg-white hover:text-emerald-700 transform hover:scale-105 transition-all shadow-md">
+                        <i class="fas fa-user-plus mr-2"></i>Register as Judge
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="w-full px-6 py-16">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white/90 backdrop-blur-lg rounded-xl p-6 transform hover:scale-105 transition-all shadow-lg">
+                    <div class="text-emerald-600 text-4xl mb-4">🏆</div>
+                    <h3 class="text-xl font-bold text-emerald-900 mb-2">Fair Judging</h3>
+                    <p class="text-emerald-700">Transparent and equitable scoring system for all participants</p>
+                </div>
+                <div class="bg-white/90 backdrop-blur-lg rounded-xl p-6 transform hover:scale-105 transition-all shadow-lg">
+                    <div class="text-emerald-600 text-4xl mb-4">📊</div>
+                    <h3 class="text-xl font-bold text-emerald-900 mb-2">Real-time Results</h3>
+                    <p class="text-emerald-700">Instant scoring updates and competition standings</p>
+                </div>
+                <div class="bg-white/90 backdrop-blur-lg rounded-xl p-6 transform hover:scale-105 transition-all shadow-lg">
+                    <div class="text-emerald-600 text-4xl mb-4">🎯</div>
+                    <h3 class="text-xl font-bold text-emerald-900 mb-2">Efficient Management</h3>
+                    <p class="text-emerald-700">Smooth and efficient competition organization and administration</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+        100% { transform: translateY(0px); }
+    }
+
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slide-up {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .animate-fade-in {
+        animation: fade-in 1s ease-out forwards;
+    }
+
+    .animate-slide-up {
+        animation: slide-up 1s ease-out forwards;
+    }
+
+    .animate-fade-in-up {
+        animation: slide-up 1s ease-out forwards;
+        animation-delay: 0.5s;
+        opacity: 0;
+    }
+    </style>
+</body>
+</html>
